@@ -97,20 +97,23 @@ plt.show()
 
 # Eliminar columnas irrelevantes
 df2.drop(columns=['title', 'body', 'amenities', 'currency', 'fee', 'has_photo', 
-                  'address', 'source', 'cityname', 'category'], inplace=True)
+                  'address', 'source', 'cityname', 'category','pets_allowed','price_type'], inplace=True)
 
 # Verificamos si aún hay datos nulos
 print(df2.isnull().sum())
 
+df2.dropna(inplace= True)
+# Verificamos si aún hay datos nulos
+print(df2.isnull().sum())
 
-#------------------------CORRELACIÓN ENTRE CARACTERISTICAS ----------------------------------------------
-#matrIz de correlaciÓn para detectar caracteristicas altamente correlacionadas
+#----------------CORRELACION PARA DETECTAR CARACTERISTICAS ALTAMENTE CORRELACIONADAS------------------
+#natruz de correlacion para detectar caracteristicas altamente correlacionadas
 correlation_matrix = df2.select_dtypes(include='number').corr()
-
 
 #Filtramos las caracteristicas altamente correlacionadas (mayor a 0.8)
 highly_correlated = [column for column in correlation_matrix.columns if any(correlation_matrix[column] > 0.8)]
-print("Caracteristicas altamente correlacionadas:",highly_correlated)
+print("Caracteristicas altamente correlacionadas:")
+print(highly_correlated)
 
 #--------------SELECCION DE CARACTERISTICAS BASADAS EN LA IMPORTANCIA CON ARBOLES DE DESICIONES-----------
 
@@ -164,30 +167,18 @@ selected_features = X_encoded.columns[rfe.support_]
 print("Características seleccionadas por RFE:")
 print(selected_features)
 
-# Evaluamos el modelo con las características seleccionadas
-model2.fit(X_train_scaled[:, rfe.support_], Y_train)
-accuracy = model2.score(X_test_scaled[:, rfe.support_], Y_test)
-
-
 #---------------------METODO DE ELIMINACIÓN BASADA EN LA VARIANZA---------------
 
 #Aplicar el umbral de varianza para eliminar caracteristicas con varianza baja
 selector = VarianceThreshold(threshold=0.1)
-selector.fit(X_train)
+X_train_selected = selector.fit(X_train)
 
 #Obtener las caracteristicas seleccionadas
-selected_features = X.columns[selector.get_support()]
+selected_features = X.columns[selector.get_support(indices=True)]
 print("Caracteristicas seleccionadas basadas en la Varianza:")
 print(selected_features)
 
-
 #--------------------ANALIZAR COMPONENTES PRINCIPALES-----------------------------
-# Suponiendo que has hecho la limpieza de datos y solo tienes columnas numéricas
-X = df2[['bathrooms', 'bedrooms', 'price', 'price_display','square_feet', 'latitude', 'longitude']]
-
-# Rellenar valores faltantes si es necesario
-X.fillna(X.median(), inplace=True)
-
 # Escalar los datos
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
