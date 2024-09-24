@@ -9,6 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 
 #----------------------------------------------
 
@@ -81,6 +83,11 @@ plt.show()
 df2['square_feet'].fillna(df2['square_feet'].median(), inplace=True)
 
 #---------------------------------ONE-HOT ENCODING-----------------------------------------------
+#Grafico de barras para la realacion entre 'Estado' y 'Area'
+sns.barplot(x='state', y='square_feet', data=df)
+plt.title('Relacion entre Estado y Area')
+plt.show()
+
 # Codificación one-hot para la columna 'state'
 df2 = pd.get_dummies(df2, columns=['state'], drop_first=True)
 
@@ -88,10 +95,6 @@ df2 = pd.get_dummies(df2, columns=['state'], drop_first=True)
 print("Columnas del dataset después de one-hot encoding:")
 print(df2.columns)
 
-#Grafico de barras para la realacion entre 'Estado' y 'Area'
-sns.barplot(x='state', y='square_feet', data=df)
-plt.title('Relacion entre Estado y Area')
-plt.show()
 
 #--------------------IDENTIFICACIÓN DE COLUMNA IRRELEVANTES DE MANERA MANUAL------------------
 
@@ -101,10 +104,8 @@ df2.drop(columns=['title', 'body', 'amenities', 'currency', 'fee', 'has_photo',
 
 # Verificamos si aún hay datos nulos
 print(df2.isnull().sum())
-
 df2.dropna(inplace= True)
-# Verificamos si aún hay datos nulos
-print(df2.isnull().sum())
+
 
 #----------------CORRELACION PARA DETECTAR CARACTERISTICAS ALTAMENTE CORRELACIONADAS------------------
 #natruz de correlacion para detectar caracteristicas altamente correlacionadas
@@ -133,8 +134,12 @@ print(X_encoded.head())
 # Dividimos el dataset en entrenamiento y prueba
 X_train, X_test, Y_train, Y_test = train_test_split(X_encoded, Y, test_size=0.2, random_state=42)
 
-# Aplicamos el modelo de Random Forest para regresión
-model = RandomForestClassifier()  
+# Aplicamos el modelo de Random Forest para clasificación
+#model = RandomForestClassifier()  
+#model.fit(X_train, Y_train)
+
+# Aplicamos el modelo de Random Forest para regresion , mejor para nuestra variable objetivo
+model = RandomForestRegressor()  
 model.fit(X_train, Y_train)
 
 # Obtenemos la importancia de las características
@@ -154,7 +159,7 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Definimos el modelo base de regresión logística
-model2 = LogisticRegression(max_iter=10000)
+model2 = LinearRegression()
 
 # Aplicamos la selección de características con RFE
 rfe = RFE(model2, n_features_to_select=5)
@@ -169,8 +174,11 @@ print(selected_features)
 
 #---------------------METODO DE ELIMINACIÓN BASADA EN LA VARIANZA---------------
 
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+
 #Aplicar el umbral de varianza para eliminar caracteristicas con varianza baja
-selector = VarianceThreshold(threshold=0.1)
+selector = VarianceThreshold(threshold=0.2)
 X_train_selected = selector.fit(X_train)
 
 #Obtener las caracteristicas seleccionadas
@@ -189,3 +197,5 @@ X_pca = pca.fit_transform(X_scaled)
 
 # Visualizar la varianza explicada
 print("Varianza explicada por cada componente:", pca.explained_variance_ratio_)
+
+
